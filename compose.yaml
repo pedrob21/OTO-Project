@@ -1,0 +1,42 @@
+x-credenciais-banco: &credenciais-banco
+  POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no arquivo .env}
+  POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no arquivo .env}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no arquivo .env}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: oto-postgres
+    environment:
+      <<: *credenciais-banco
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - oto-postgres-dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    profiles: ["app"]
+    build: .
+    container_name: oto-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *credenciais-banco
+      DB_HOST: postgres
+      DB_PORT: "5433"
+      JWT_SEGREDO: ${JWT_SEGREDO:?defina JWT_SEGREDO no arquivo .env}
+      ADMIN_NOME: ${ADMIN_NOME:-Administrador OTO}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_SENHA: ${ADMIN_SENHA:-}
+      CORS_ORIGENS: ${CORS_ORIGENS:-http://localhost:*,http://127.0.0.1:*}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  oto-postgres-dados:

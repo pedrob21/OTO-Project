@@ -6,7 +6,7 @@ publicação dos resultados pela metodologia do OTO, série histórica e dados d
 
 ## Como rodar
 
-1. Copie `.env.example` para `.env` e preencha:
+1. Copie o arquivo`.env.example` renomeando para `.env` e preencha:
     - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`: o container do PostgreSQL cria esse
       banco e esse usuário na primeira subida, então não é preciso criar nada antes;
     - `JWT_SEGREDO`: segredo dos tokens de login, com pelo menos 32 caracteres

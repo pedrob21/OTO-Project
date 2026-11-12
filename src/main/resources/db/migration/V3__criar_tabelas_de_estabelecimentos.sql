@@ -52,8 +52,6 @@ CREATE TABLE estabelecimento (
     aceita_pesquisas         BOOLEAN      NOT NULL DEFAULT TRUE,
     telefone_pesquisas       VARCHAR(30),
     email_pesquisas          VARCHAR(254),
-    destino_inteligente      BOOLEAN      NOT NULL DEFAULT FALSE,
-    dados_pddt               BOOLEAN      NOT NULL DEFAULT FALSE,
 
     -- Controle
     ativo                    BOOLEAN      NOT NULL DEFAULT TRUE,
@@ -78,8 +76,6 @@ COMMENT ON COLUMN estabelecimento.segmento IS 'Novos segmentos (alimentação, a
 COMMENT ON COLUMN estabelecimento.situacao IS 'IRREGULAR = meio de hospedagem sem regularização. Fica fora dos cálculos, como na série histórica.';
 COMMENT ON COLUMN estabelecimento.cnpj IS 'Só dígitos.';
 COMMENT ON COLUMN estabelecimento.cadastur_exigencia IS 'Coluna "CADASTUR 1=obrigatório 2=opcional 3=não consta" da planilha.';
-COMMENT ON COLUMN estabelecimento.destino_inteligente IS 'Coluna "Filtro D = Destinos Inteligentes" da planilha.';
-COMMENT ON COLUMN estabelecimento.dados_pddt IS 'Coluna "Dados PDDT" da planilha (significado a confirmar com o OTO).';
 COMMENT ON COLUMN estabelecimento.inventario_atualizado_em IS 'Última vez que o inventário foi revisado pelo parceiro ou pela Secretaria.';
 
 -- Capacidade (UH e leitos) com histórico: cada mudança cria uma nova linha,

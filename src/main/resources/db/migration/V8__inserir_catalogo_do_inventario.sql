@@ -3,7 +3,8 @@
 -- Gerado a partir do cabeçalho da aba "Meios de Hospedagem" do Inventário
 -- Oficial (serviços e equipamentos, acessibilidade) e das colunas de ODS de
 -- uso exclusivo da Secretaria. As opções "Não" da planilha não viram itens:
--- nenhum item marcado no grupo equivale a "Não".
+-- nenhum item marcado no grupo equivale a "Não". Os itens que o dicionário de
+-- campos do inventário trata como "Sim ou Não com detalhe" aceitam complemento.
 -- =============================================================================
 
 INSERT INTO inventario_grupo (categoria, codigo, nome, exclusivo_secretaria, ordem) VALUES
@@ -38,11 +39,11 @@ INSERT INTO inventario_grupo (categoria, codigo, nome, exclusivo_secretaria, ord
 INSERT INTO inventario_item (grupo_id, codigo, nome, descricao, permite_complemento, ordem)
 SELECT g.id, v.codigo, v.nome, v.descricao, v.permite_complemento, v.ordem
 FROM (VALUES
-    ('GERAL', 'ESTACIONAMENTO', 'Estacionamento', NULL, FALSE, 1),
+    ('GERAL', 'ESTACIONAMENTO', 'Estacionamento', NULL, TRUE, 1),
     ('GERAL', 'MANOBRISTA', 'Manobrista', NULL, FALSE, 2),
     ('GERAL', 'MENSAGEIRO', 'Mensageiro', NULL, FALSE, 3),
     ('GERAL', 'AREA_PARA_FUMANTES', 'Área para fumantes', NULL, FALSE, 4),
-    ('GERAL', 'ACEITA_PET', 'Aceita pet', NULL, FALSE, 5),
+    ('GERAL', 'ACEITA_PET', 'Aceita pet', NULL, TRUE, 5),
     ('ATENDIMENTO_LINGUA_ESTRANGEIRA', 'INGLES', 'Inglês', NULL, FALSE, 1),
     ('ATENDIMENTO_LINGUA_ESTRANGEIRA', 'ESPANHOL', 'Espanhol', NULL, FALSE, 2),
     ('ATENDIMENTO_LINGUA_ESTRANGEIRA', 'OUTRA', 'Outra', NULL, TRUE, 3),
@@ -52,14 +53,14 @@ FROM (VALUES
     ('UNIDADE_HABITACIONAL', 'FRIGOBAR', 'Frigobar', NULL, FALSE, 4),
     ('UNIDADE_HABITACIONAL', 'TV', 'TV', NULL, FALSE, 5),
     ('UNIDADE_HABITACIONAL', 'OUTROS', 'Outros', NULL, TRUE, 6),
-    ('RECEPCAO', 'INTERNET_SEM_FIO', 'Internet sem fio', NULL, FALSE, 1),
+    ('RECEPCAO', 'INTERNET_SEM_FIO', 'Internet sem fio', NULL, TRUE, 1),
     ('RECEPCAO', 'AR_CONDICIONADO', 'Ar-condicionado', NULL, FALSE, 2),
     ('RECEPCAO', 'CLIMATIZADOR_OU_VENTILADOR', 'Climatizador ou ventilador', NULL, FALSE, 3),
     ('RECEPCAO', 'AREA_DE_ESTAR', 'Área de estar', NULL, FALSE, 4),
     ('RECEPCAO', 'SANITARIO', 'Sanitário', NULL, FALSE, 5),
     ('RECEPCAO', 'SANITARIO_PCD', 'Sanitário PCD', NULL, FALSE, 6),
     ('RECEPCAO', 'OUTROS', 'Outros', NULL, TRUE, 7),
-    ('ALIMENTOS_BEBIDAS', 'CAFE_DA_MANHA', 'Café da manhã', NULL, FALSE, 1),
+    ('ALIMENTOS_BEBIDAS', 'CAFE_DA_MANHA', 'Café da manhã', NULL, TRUE, 1),
     ('ALIMENTOS_BEBIDAS', 'MEIA_PENSAO', 'Meia pensão', NULL, FALSE, 2),
     ('ALIMENTOS_BEBIDAS', 'PENSAO_COMPLETA', 'Pensão completa', NULL, FALSE, 3),
     ('ALIMENTOS_BEBIDAS', 'ALL_INCLUSIVE', 'All-Inclusive', NULL, FALSE, 4),
@@ -80,7 +81,7 @@ FROM (VALUES
     ('AREA_EVENTOS', 'SANITARIO_EXCLUSIVO_AREA_DE_EVENTOS', 'Sanitário exclusivo área de eventos', NULL, FALSE, 3),
     ('AREA_EVENTOS', 'SANITARIO_PCD_EXCLUSIVO_AREA_DE_EVENTOS', 'Sanitário PCD exclusivo área de eventos', NULL, FALSE, 4),
     ('AREA_EVENTOS', 'MOBILIARIO', 'Mobiliário', NULL, FALSE, 5),
-    ('AREA_EVENTOS', 'EQUIPAMENTOS_AUDIOVISUAIS', 'Equipamentos audiovisuais', NULL, FALSE, 6),
+    ('AREA_EVENTOS', 'EQUIPAMENTOS_AUDIOVISUAIS', 'Equipamentos audiovisuais', NULL, TRUE, 6),
     ('AREA_EVENTOS', 'OUTROS', 'Outros', NULL, TRUE, 7),
     ('AREA_RECREACAO', 'PISCINA', 'Piscina', NULL, FALSE, 1),
     ('AREA_RECREACAO', 'PISCINA_INFANTIL', 'Piscina infantil', NULL, FALSE, 2),
@@ -146,7 +147,7 @@ FROM (VALUES
     ('ELEVADOR', 'SENSOR_ELETRONICO_PORTA', 'Sensor eletrônico (porta)', NULL, FALSE, 4),
     ('ELEVADOR', 'SINALIZACAO_VISUAL', 'Sinalização visual', NULL, FALSE, 5),
     ('ELEVADOR', 'OUTROS', 'Outros', NULL, TRUE, 6),
-    ('EQUIPAMENTO_MOTORIZADO', 'SIM', 'Sim', NULL, FALSE, 1),
+    ('EQUIPAMENTO_MOTORIZADO', 'SIM', 'Sim', NULL, TRUE, 1),
     ('SINALIZACAO_VISUAL', 'ENTRADA_SAIDA', 'Entrada/saída', NULL, FALSE, 1),
     ('SINALIZACAO_VISUAL', 'RECEPCAO', 'Recepção', NULL, FALSE, 2),
     ('SINALIZACAO_VISUAL', 'SANITARIO', 'Sanitário', NULL, FALSE, 3),

@@ -207,8 +207,7 @@ primeira faixa começa sempre em 0% (dela só o nome muda). Excluir algo já usa
   },
   "secretaria": {
     "tipoHospedagemCodigo": "HOTEL", "situacao": "REGULAR", "contatoNome": "Maria",
-    "aceitaPesquisas": true, "telefonePesquisas": "17 99999-0000", "emailPesquisas": "gerencia@hotelexemplo.com",
-    "destinoInteligente": false, "dadosPddt": false
+    "aceitaPesquisas": true, "telefonePesquisas": "17 99999-0000", "emailPesquisas": "gerencia@hotelexemplo.com"
   },
   "capacidade": { "vigenteDesde": "2026-01-01", "qtdUh": 40, "qtdUhPcd": 2, "qtdLeitos": 120, "maxLeitosPorUh": 4 }
 }

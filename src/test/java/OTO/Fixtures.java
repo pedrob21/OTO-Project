@@ -66,7 +66,7 @@ public final class Fixtures {
     }
 
     public static DadosSecretaria secretaria(String tipo, Situacao situacao) {
-        return new DadosSecretaria(tipo, situacao, "Maria", true, "17999990000", "pesquisa@hotel.com", false, false);
+        return new DadosSecretaria(tipo, situacao, "Maria", true, "17999990000", "pesquisa@hotel.com");
     }
 
     public static Estabelecimento estabelecimento(long id, String nome, String tipo) {

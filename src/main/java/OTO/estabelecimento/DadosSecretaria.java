@@ -12,7 +12,5 @@ public record DadosSecretaria(
         @Size(max = 150) String contatoNome,
         boolean aceitaPesquisas,
         @Size(max = 30) String telefonePesquisas,
-        @Email @Size(max = 254) String emailPesquisas,
-        boolean destinoInteligente,
-        boolean dadosPddt) {
+        @Email @Size(max = 254) String emailPesquisas) {
 }

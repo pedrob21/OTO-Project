@@ -95,10 +95,6 @@ public class Estabelecimento {
     private String telefonePesquisas;
     @Column(name = "email_pesquisas")
     private String emailPesquisas;
-    @Column(name = "destino_inteligente")
-    private boolean destinoInteligente;
-    @Column(name = "dados_pddt")
-    private boolean dadosPddt;
 
     private boolean ativo;
     @Column(name = "inventario_atualizado_em")
@@ -158,8 +154,6 @@ public class Estabelecimento {
         this.aceitaPesquisas = s.aceitaPesquisas();
         this.telefonePesquisas = s.telefonePesquisas();
         this.emailPesquisas = s.emailPesquisas();
-        this.destinoInteligente = s.destinoInteligente();
-        this.dadosPddt = s.dadosPddt();
         this.atualizadoEm = Instant.now();
     }
 
@@ -174,7 +168,7 @@ public class Estabelecimento {
 
     public DadosSecretaria getDadosSecretaria() {
         return new DadosSecretaria(tipoHospedagemCodigo, situacao, contatoNome, aceitaPesquisas,
-                telefonePesquisas, emailPesquisas, destinoInteligente, dadosPddt);
+                telefonePesquisas, emailPesquisas);
     }
 
     public void definirAtivo(boolean ativo) {

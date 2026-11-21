@@ -1,6 +1,9 @@
 package OTO.pesquisa;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -38,16 +41,23 @@ public class RespostaService {
     private final EstabelecimentoRepository estabelecimentos;
     private final ResultadoCampanhaRepository resultados;
     private final ControleAcesso acesso;
+    private final Clock relogio;
+    private final PesquisaProperties configuracao;
+
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public RespostaService(RespostaOcupacaoRepository respostas, RespostaOcupacaoHistoricoRepository historicos,
             CampanhaRepository campanhas, EstabelecimentoRepository estabelecimentos,
-            ResultadoCampanhaRepository resultados, ControleAcesso acesso) {
+            ResultadoCampanhaRepository resultados, ControleAcesso acesso, Clock relogio,
+            PesquisaProperties configuracao) {
         this.respostas = respostas;
         this.historicos = historicos;
         this.campanhas = campanhas;
         this.estabelecimentos = estabelecimentos;
         this.resultados = resultados;
         this.acesso = acesso;
+        this.relogio = relogio;
+        this.configuracao = configuracao;
     }
 
     /**
@@ -64,6 +74,11 @@ public class RespostaService {
         boolean podeResponder = rodada.isAberta() || (usuario.isAdmin() && rodada.isEncerrada());
         if (!podeResponder) {
             throw new RegraNegocioException("A pesquisa " + rodada.getCodigo() + " não está aberta para respostas.");
+        }
+        if (!usuario.isAdmin() && !aceitaResposta(rodada)) {
+            throw new RegraNegocioException("O prazo para responder à pesquisa " + rodada.getCodigo() + " terminou em "
+                    + rodada.ultimoDiaParaResponder(configuracao.diasDeTolerancia()).format(DATA_BR)
+                    + ". Fale com a equipe do OTO para enviar a resposta.");
         }
         if (campanha.isPublicada()) {
             throw new RegraNegocioException("A campanha já foi publicada. Cancele a publicação para mudar as respostas.");
@@ -126,7 +141,9 @@ public class RespostaService {
         List<PendenciaResponse> lista = new ArrayList<>();
         for (Campanha campanha : abertas) {
             for (Estabelecimento e : participantes) {
-                lista.add(PendenciaResponse.de(campanha, e, enviadas.get(chave(campanha.getId(), e.getId()))));
+                lista.add(PendenciaResponse.de(campanha, e, enviadas.get(chave(campanha.getId(), e.getId())),
+                        campanha.getRodada().ultimoDiaParaResponder(configuracao.diasDeTolerancia()),
+                        aceitaResposta(campanha.getRodada())));
             }
         }
         return lista;
@@ -162,5 +179,10 @@ public class RespostaService {
 
     private static String chave(Long campanhaId, Long estabelecimentoId) {
         return campanhaId + ":" + estabelecimentoId;
+    }
+
+    /** O parceiro responde até o fim do prazo mais os dias de tolerância, contados no fuso do OTO. */
+    private boolean aceitaResposta(RodadaPesquisa rodada) {
+        return rodada.aceitaRespostaDoParceiro(LocalDate.now(relogio), configuracao.diasDeTolerancia());
     }
 }

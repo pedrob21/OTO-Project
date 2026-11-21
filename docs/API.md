@@ -311,9 +311,9 @@ nenhuma campanha dela estiver publicada.
 | POST | `/api/rodadas/{id}/campanhas` | Inclui campanha (só em rascunho, 201) |
 | PUT · DELETE | `/api/rodadas/{id}/campanhas/{campanhaId}` | Altera ou exclui campanha (só em rascunho) |
 | POST | `/api/rodadas/{id}/abrir` | `{ "dataAbertura": null, "prazoResposta": "2026-03-10" }` (sem data de abertura, vale hoje) |
-| POST | `/api/rodadas/{id}/prorrogar` | `{ "prazoResposta": "2026-03-15" }` |
+| POST | `/api/rodadas/{id}/prorrogar` | `{ "prazoResposta": "2026-03-15" }` (vale também depois do prazo vencido; o novo prazo não pode ser anterior a hoje) |
 | POST | `/api/rodadas/{id}/encerrar` | Fecha para respostas |
-| POST | `/api/rodadas/{id}/reabrir` | `{ "prazoResposta": "2026-03-20" }` |
+| POST | `/api/rodadas/{id}/reabrir` | `{ "prazoResposta": "2026-03-20" }` (o novo prazo não pode ser anterior a hoje) |
 | GET | `/api/rodadas/{id}/acompanhamento` | Quem respondeu e quem falta, com os contatos e o % de leitos respondentes |
 
 ```json
@@ -346,8 +346,15 @@ nenhuma campanha dela estiver publicada.
 ```
 
 O ADMIN também lança respostas recebidas por telefone ou WhatsApp (fica registrado quem enviou).
-O parceiro responde enquanto a pesquisa está `ABERTA`; o ADMIN, também depois do encerramento,
-enquanto a campanha não for publicada. Só estabelecimentos ativos e regulares respondem.
+O parceiro responde enquanto a pesquisa está `ABERTA` e até **30 dias depois do prazo de resposta**
+(configurável em `PESQUISA_DIAS_TOLERANCIA`); depois disso recebe **422** ("O prazo para responder à
+pesquisa 005/26 terminou em 09/02/2026..."). O ADMIN não tem esse limite: lança também depois do
+prazo e do encerramento, enquanto a campanha não for publicada. Prorrogar o prazo libera o parceiro
+de novo. As datas contam no horário de Brasília. Só estabelecimentos ativos e regulares respondem.
+
+Nas pendências (`GET /api/respostas/pendencias`), `respostasAte` é o último dia em que o parceiro
+ainda responde (prazo + tolerância) e `aceitaResposta: false` indica que já passou: a tela deve
+desabilitar o envio e orientar o parceiro a falar com o OTO.
 
 ### Resultados
 

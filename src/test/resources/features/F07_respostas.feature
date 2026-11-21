@@ -42,6 +42,32 @@ Funcionalidade: Respostas
       | Flat D          | inativo   |
       | Hostel E        | irregular |
 
+  Cenário: Parceiro ainda responde até 30 dias depois do prazo
+    Dado que o prazo da pesquisa "001/26" terminou há 30 dias
+    Quando o PARCEIRO A envia a resposta do "Hotel A": taxa "80,00"% e diária R$ "500,00"
+    Então a resposta tem status 200
+
+  Cenário: Passados 30 dias do prazo, o parceiro não responde mais
+    Dado que o prazo da pesquisa "001/26" terminou há 31 dias
+    Quando o PARCEIRO A envia a resposta do "Hotel A": taxa "80,00"% e diária R$ "500,00"
+    Então a resposta tem status 422
+    E a mensagem de erro começa com "O prazo para responder à pesquisa 001/26 terminou em"
+    Quando o PARCEIRO A chama GET "/api/respostas/pendencias"
+    Então o campo "[0].aceitaResposta" da resposta é "falso"
+
+  Cenário: Depois do limite do parceiro, o ADMIN ainda lança a resposta
+    Dado que o prazo da pesquisa "001/26" terminou há 31 dias
+    Quando o ADMIN envia a resposta do "Hotel A": taxa "80,00"% e diária R$ "500,00"
+    Então a resposta tem status 200
+
+  Cenário: Prorrogar o prazo libera o parceiro de novo
+    Dado que o prazo da pesquisa "001/26" terminou há 31 dias
+    Quando o ADMIN prorroga a pesquisa "001/26" com prazo de 7 dias
+    Então a resposta tem status 200
+    Quando o PARCEIRO A envia a resposta do "Hotel A": taxa "80,00"% e diária R$ "500,00"
+    Então a resposta tem status 200
+    E o campo "versao" da resposta é "1"
+
   Cenário: Taxa acima de 100% é recusada
     Quando o PARCEIRO A envia a resposta do "Hotel A": taxa "101,00"% e diária R$ "450,00"
     Então a resposta tem status 400

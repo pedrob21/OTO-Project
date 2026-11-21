@@ -12,16 +12,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,7 +48,8 @@ import OTO.referencia.FeriadoEventoRepository;
 class RodadaServiceTest {
 
     private static final YearMonth FEV = YearMonth.of(2026, 2);
-    private static final LocalDate HOJE = LocalDate.now();
+    /** O prazo das pesquisas da Fixtures é 10/01/2026; os testes rodam em 05/01/2026. */
+    private static final LocalDate HOJE = LocalDate.of(2026, 1, 5);
 
     @Mock
     private RodadaPesquisaRepository rodadas;
@@ -59,8 +62,14 @@ class RodadaServiceTest {
     @Mock
     private AuditoriaService auditoria;
 
-    @InjectMocks
     private RodadaService servico;
+
+    @BeforeEach
+    void criarServico() {
+        ZoneId fuso = ZoneId.of("America/Sao_Paulo");
+        Clock relogio = Clock.fixed(HOJE.atTime(12, 0).atZone(fuso).toInstant(), fuso);
+        servico = new RodadaService(rodadas, campanhas, feriados, bases, auditoria, relogio);
+    }
 
     private RodadaPesquisa rascunho() {
         RodadaPesquisa r = Fixtures.rodada(1, "005/26", StatusRodada.RASCUNHO);
@@ -336,6 +345,28 @@ class RodadaServiceTest {
         assertThat(prorrogada.prazoResposta()).isEqualTo(prazoAnterior.plusDays(5));
         verify(auditoria).registrar(1L, "rodada_pesquisa", 1L, "PRORROGAR", Map.of("prazoResposta", prazoAnterior),
                 requisicao);
+    }
+
+    @Test
+    void prorrogarOuReabrirParaUmaDataQueJaPassouNaoPode() {
+        naSituacao(StatusRodada.ABERTA);
+        assertThatThrownBy(() -> servico.prorrogar(1L, new PrazoRequest(HOJE.minusDays(1)), ADMIN))
+                .hasMessage("O novo prazo de resposta não pode ser anterior a hoje.");
+
+        naSituacao(StatusRodada.ENCERRADA);
+        assertThatThrownBy(() -> servico.reabrir(1L, new PrazoRequest(HOJE.minusDays(1)), ADMIN))
+                .hasMessage("O novo prazo de resposta não pode ser anterior a hoje.");
+        verify(auditoria, never()).registrar(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prorrogarDepoisDoPrazoVencidoPode() {
+        RodadaPesquisa r = naSituacao(StatusRodada.ABERTA);
+        r.prorrogar(HOJE.minusDays(40));
+
+        RodadaResponse prorrogada = servico.prorrogar(1L, new PrazoRequest(HOJE.plusDays(7)), ADMIN);
+
+        assertThat(prorrogada.prazoResposta()).isEqualTo(HOJE.plusDays(7));
     }
 
     @Test

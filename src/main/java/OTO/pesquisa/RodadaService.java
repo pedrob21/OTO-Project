@@ -1,6 +1,7 @@
 package OTO.pesquisa;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
@@ -46,14 +47,16 @@ public class RodadaService {
     private final FeriadoEventoRepository feriados;
     private final BaseCalculoService bases;
     private final AuditoriaService auditoria;
+    private final Clock relogio;
 
     public RodadaService(RodadaPesquisaRepository rodadas, CampanhaRepository campanhas,
-            FeriadoEventoRepository feriados, BaseCalculoService bases, AuditoriaService auditoria) {
+            FeriadoEventoRepository feriados, BaseCalculoService bases, AuditoriaService auditoria, Clock relogio) {
         this.rodadas = rodadas;
         this.campanhas = campanhas;
         this.feriados = feriados;
         this.bases = bases;
         this.auditoria = auditoria;
+        this.relogio = relogio;
     }
 
     @Transactional(readOnly = true)
@@ -149,7 +152,7 @@ public class RodadaService {
         if (lista.isEmpty()) {
             throw new RegraNegocioException("Inclua ao menos uma campanha antes de abrir a pesquisa.");
         }
-        LocalDate abertura = requisicao.dataAbertura() == null ? LocalDate.now() : requisicao.dataAbertura();
+        LocalDate abertura = requisicao.dataAbertura() == null ? LocalDate.now(relogio) : requisicao.dataAbertura();
         validarDatas(abertura, requisicao.prazoResposta());
         rodada.abrir(abertura, requisicao.prazoResposta());
         auditoria.registrar(admin.id(), "rodada_pesquisa", id, "ABRIR", null, requisicao);
@@ -163,6 +166,7 @@ public class RodadaService {
             throw new RegraNegocioException("Só é possível prorrogar uma pesquisa aberta.");
         }
         validarDatas(rodada.getDataAbertura(), requisicao.prazoResposta());
+        validarNovoPrazo(requisicao.prazoResposta());
         LocalDate prazoAnterior = rodada.getPrazoResposta();
         rodada.prorrogar(requisicao.prazoResposta());
         auditoria.registrar(admin.id(), "rodada_pesquisa", id, "PRORROGAR", Map.of("prazoResposta", prazoAnterior),
@@ -192,6 +196,7 @@ public class RodadaService {
             throw new RegraNegocioException("A pesquisa tem campanha publicada. Cancele a publicação antes de reabrir.");
         }
         validarDatas(rodada.getDataAbertura(), requisicao.prazoResposta());
+        validarNovoPrazo(requisicao.prazoResposta());
         rodada.reabrir(requisicao.prazoResposta());
         auditoria.registrar(admin.id(), "rodada_pesquisa", id, "REABRIR", null, requisicao);
         return buscar(id);
@@ -272,6 +277,13 @@ public class RodadaService {
         }
         return new DadosCampanha(d.nome().trim(), d.modalidade(), d.tipoPeriodo(), feriado, d.periodoInicio(),
                 d.periodoFim(), d.qtdDiarias());
+    }
+
+    /** Prorrogar ou reabrir para uma data que já passou bloquearia o parceiro na hora. */
+    private void validarNovoPrazo(LocalDate prazo) {
+        if (prazo != null && prazo.isBefore(LocalDate.now(relogio))) {
+            throw new RegraNegocioException("O novo prazo de resposta não pode ser anterior a hoje.");
+        }
     }
 
     private static void validarDatas(LocalDate abertura, LocalDate prazo) {

@@ -92,6 +92,12 @@ public class PassosComuns {
         assertEquals(mensagem, api.corpo().path("detail").asString(), api.resposta().asString());
     }
 
+    @Entao("a mensagem de erro começa com {string}")
+    public void aMensagemDeErroComecaCom(String inicio) {
+        String detalhe = api.corpo().path("detail").asString();
+        assertTrue(detalhe.startsWith(inicio), "detail: " + detalhe);
+    }
+
     @Entao("o erro está no formato Problem Details com status {int}")
     public void oErroEstaNoFormatoProblemDetails(int status) {
         assertEquals(status, api.resposta().statusCode());

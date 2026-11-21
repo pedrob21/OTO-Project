@@ -85,6 +85,17 @@ public class RodadaPesquisa {
         this.prazoResposta = novoPrazo;
     }
 
+    /** Último dia em que o parceiro ainda responde: o prazo mais os dias de tolerância. */
+    public LocalDate ultimoDiaParaResponder(int diasDeTolerancia) {
+        return prazoResposta == null ? null : prazoResposta.plusDays(diasDeTolerancia);
+    }
+
+    /** O parceiro responde enquanto a pesquisa está aberta e o prazo (mais a tolerância) não passou. */
+    public boolean aceitaRespostaDoParceiro(LocalDate hoje, int diasDeTolerancia) {
+        LocalDate ultimoDia = ultimoDiaParaResponder(diasDeTolerancia);
+        return isAberta() && (ultimoDia == null || !hoje.isAfter(ultimoDia));
+    }
+
     public boolean isRascunho() { return status == StatusRodada.RASCUNHO; }
     public boolean isAberta() { return status == StatusRodada.ABERTA; }
     public boolean isEncerrada() { return status == StatusRodada.ENCERRADA; }

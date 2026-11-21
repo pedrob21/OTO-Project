@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -22,9 +23,12 @@ import tools.jackson.databind.JsonNode;
 public class PassosPesquisa {
 
     private final Api api;
+    private final Clock relogio;
 
-    public PassosPesquisa(Api api) {
+    /** O relógio é o da aplicação (fuso do OTO), para "hoje" ser o mesmo dia que a API usa. */
+    public PassosPesquisa(Api api, Clock relogio) {
         this.api = api;
+        this.relogio = relogio;
     }
 
     // ------------------------------------------------------------------ pesquisa (rodada)
@@ -64,7 +68,7 @@ public class PassosPesquisa {
     public void abreAPesquisa(String codigo, int dias) {
         Map<String, Object> corpo = new HashMap<>();
         corpo.put("dataAbertura", null);
-        corpo.put("prazoResposta", LocalDate.now().plusDays(dias).toString());
+        corpo.put("prazoResposta", hoje().plusDays(dias).toString());
         api.chamar("ADMIN", "POST", "/api/rodadas/" + api.rodada(codigo) + "/abrir", corpo);
     }
 
@@ -76,7 +80,34 @@ public class PassosPesquisa {
     @Quando("o ADMIN reabre a pesquisa {string} com prazo de {int} dias")
     public void reabreAPesquisa(String codigo, int dias) {
         api.chamar("ADMIN", "POST", "/api/rodadas/" + api.rodada(codigo) + "/reabrir",
-                Map.of("prazoResposta", LocalDate.now().plusDays(dias).toString()));
+                Map.of("prazoResposta", hoje().plusDays(dias).toString()));
+    }
+
+    @Quando("o ADMIN prorroga a pesquisa {string} com prazo de {int} dias")
+    public void prorrogaAPesquisa(String codigo, int dias) {
+        prorrogar(codigo, hoje().plusDays(dias));
+    }
+
+    @Quando("o ADMIN prorroga a pesquisa {string} para ontem")
+    public void prorrogaAPesquisaParaOntem(String codigo) {
+        prorrogar(codigo, hoje().minusDays(1));
+    }
+
+    private void prorrogar(String codigo, LocalDate prazo) {
+        api.chamar("ADMIN", "POST", "/api/rodadas/" + api.rodada(codigo) + "/prorrogar",
+                Map.of("prazoResposta", prazo.toString()));
+    }
+
+    /** Simula a passagem do tempo: o prazo da pesquisa passa a ser N dias antes de hoje. */
+    @Dado("(que )o prazo da pesquisa {string} terminou há {int} dia(s)")
+    public void oPrazoDaPesquisaTerminouHa(String codigo, int dias) {
+        int alteradas = api.jdbc().update("UPDATE rodada_pesquisa SET prazo_resposta = ? WHERE codigo = ?",
+                hoje().minusDays(dias), codigo);
+        assertEquals(1, alteradas, "pesquisa " + codigo + " não encontrada");
+    }
+
+    private LocalDate hoje() {
+        return LocalDate.now(relogio);
     }
 
     @Entao("a pesquisa {string} está com o status {string}")

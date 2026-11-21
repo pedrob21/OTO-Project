@@ -42,9 +42,10 @@ FROM (VALUES
 JOIN usuario u ON u.email = v.email
 JOIN estabelecimento e ON e.nome_fantasia = v.nome;
 
--- Pesquisa 001/26, aberta, com a campanha consolidada do feriado de 1º de Maio.
+-- Pesquisa 001/26, aberta, com a campanha consolidada do feriado de 1º de Maio. O prazo é
+-- relativo à data do teste, para o parceiro sempre poder responder (os cenários de prazo o mudam).
 INSERT INTO rodada_pesquisa (codigo, titulo, status, data_abertura, prazo_resposta, criado_por)
-SELECT '001/26', 'Pesquisa do feriado de 1º de Maio 2026', 'ABERTA', DATE '2026-05-04', DATE '2026-05-15', id
+SELECT '001/26', 'Pesquisa do feriado de 1º de Maio 2026', 'ABERTA', DATE '2026-05-04', CURRENT_DATE + 10, id
 FROM usuario WHERE email = 'admin@oto.test';
 
 INSERT INTO campanha (rodada_id, nome, modalidade, tipo_periodo, feriado_codigo, periodo_inicio, periodo_fim, qtd_diarias)

@@ -45,6 +45,11 @@ Funcionalidade: Ciclo da pesquisa
     Então a resposta tem status 200
     E a pesquisa "002/26" está com o status "ABERTA"
 
+  Cenário: Prorrogação para uma data que já passou é recusada
+    Quando o ADMIN prorroga a pesquisa "001/26" para ontem
+    Então a resposta tem status 422
+    E a mensagem de erro é "O novo prazo de resposta não pode ser anterior a hoje."
+
   Cenário: Só se encerra uma pesquisa aberta
     Dado que o ADMIN criou a pesquisa "002/26" com a campanha mensal "Consolidada junho/2026" de 01/06/2026 a 30/06/2026
     Quando o ADMIN encerra a pesquisa "002/26"

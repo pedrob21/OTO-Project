@@ -363,8 +363,8 @@ desabilitar o envio e orientar o parceiro a falar com o OTO.
 | GET | `/api/campanhas/{id}/previa` | ADMIN | Simula o resultado com as respostas atuais e diz o que ainda impede a publicação |
 | POST | `/api/campanhas/{id}/publicacao` | ADMIN | Calcula e grava o resultado. Exige a pesquisa encerrada e o mínimo de leitos respondentes (70%) |
 | DELETE | `/api/campanhas/{id}/publicacao` | ADMIN | Cancela uma publicação feita por engano (204) |
-| GET | `/api/campanhas/{id}/resultado` | todos | Resultado publicado (404 se ainda não foi publicado) |
-| GET | `/api/campanhas/{id}/resultado.csv` | todos | O mesmo em CSV para Excel (`;`, vírgula decimal) |
+| GET | `/api/campanhas/{id}/resultado` | todos | Resultado publicado. Campanha inexistente: 404. Campanha existente e não publicada: 422 ("ainda não foi publicada"; para o ADMIN a mensagem aponta a prévia, que é a visão de campanha não publicada) |
+| GET | `/api/campanhas/{id}/resultado.csv` | todos | O mesmo em CSV para Excel (`;`, vírgula decimal), com os mesmos 404 e 422 do resultado |
 | GET | `/api/campanhas/publicadas?modalidade=&tipoPeriodo=&ano=` | todos | Campanhas publicadas, mais recentes primeiro |
 | GET | `/api/campanhas/{id}/diarias` | ADMIN | Diárias médias digitadas pela equipe para a campanha |
 | PUT | `/api/campanhas/{id}/diarias` | ADMIN | Substitui as diárias digitadas (só antes da publicação) |

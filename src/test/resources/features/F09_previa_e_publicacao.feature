@@ -26,7 +26,7 @@ Funcionalidade: Prévia e publicação
     Quando o ADMIN publica a campanha "1º de Maio 2026"
     Então a resposta tem status 422
     E a mensagem de erro é "Leitos respondentes: 68,38%. O mínimo para publicar é 70,00%."
-    E o VISUALIZADOR não encontra o resultado da campanha "1º de Maio 2026"
+    E o VISUALIZADOR não consegue ver o resultado da campanha "1º de Maio 2026"
 
   Cenário: Com a resposta da Pousada C a campanha atinge o mínimo e é publicada
     Dado que o ADMIN encerrou a pesquisa "001/26"
@@ -61,6 +61,6 @@ Funcionalidade: Prévia e publicação
     E a campanha "1º de Maio 2026" publicada
     Quando o ADMIN cancela a publicação da campanha "1º de Maio 2026"
     Então a resposta tem status 204
-    E o VISUALIZADOR não encontra o resultado da campanha "1º de Maio 2026"
+    E o VISUALIZADOR não consegue ver o resultado da campanha "1º de Maio 2026"
     Quando o ADMIN reabre a pesquisa "001/26" com prazo de 5 dias
     Então a resposta tem status 200

@@ -151,16 +151,24 @@ public class ResultadoService {
         auditoria.registrar(admin.id(), "campanha", campanhaId, "CANCELAR_PUBLICACAO", null, null);
     }
 
-    /** resultado publicado. Para quem não é ADMIN, tipos com poucos respondentes vêm sem valores. */
+    /**
+     * resultado publicado. Para quem não é ADMIN, tipos com poucos respondentes vêm sem valores.
+     * Campanha ainda não publicada é recusada para todos (o ADMIN acompanha pela prévia).
+     */
     @Transactional(readOnly = true)
     public ResultadoResponse resultado(Long campanhaId, UsuarioLogado usuario) {
         Campanha campanha = carregar(campanhaId);
-        ResultadoCampanha resultado = resultados.findById(campanhaId)
-                .filter(r -> campanha.isPublicada())
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "A campanha " + campanhaId + " ainda não tem resultado publicado."));
+        ResultadoCampanha resultado = resultados.findById(campanhaId).filter(r -> campanha.isPublicada())
+                .orElseThrow(() -> new RegraNegocioException(naoPublicada(campanhaId, usuario)));
         return montar(campanha, resultado, resultadosTipo.findByIdCampanhaId(campanhaId),
                 resultadosFaixa.findByIdCampanhaId(campanhaId), usuario.isAdmin());
+    }
+
+    private static String naoPublicada(Long campanhaId, UsuarioLogado usuario) {
+        String mensagem = "A campanha " + campanhaId + " ainda não foi publicada.";
+        return usuario.isAdmin()
+                ? mensagem + " Para ver a simulação, use a prévia: GET /api/campanhas/" + campanhaId + "/previa."
+                : mensagem;
     }
 
     @Transactional(readOnly = true)

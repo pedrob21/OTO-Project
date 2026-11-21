@@ -29,6 +29,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import OTO.SegurancaDeTeste;
+import OTO.comum.excecao.RecursoNaoEncontradoException;
+import OTO.comum.excecao.RegraNegocioException;
 import OTO.calculo.ResultadoDtos.CampanhaPublicadaResponse;
 import OTO.calculo.ResultadoDtos.FaixaRef;
 import OTO.calculo.ResultadoDtos.PreviaResponse;
@@ -85,6 +87,37 @@ class ResultadoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.taxaOcupacao").value(60.0))
                 .andExpect(jsonPath("$.campanha.nome").value("Fevereiro"));
+    }
+
+    @Test
+    void resultadoDeCampanhaNaoPublicadaVira422ComMensagemClara() throws Exception {
+        when(servico.resultado(10L, ADMIN)).thenThrow(new RegraNegocioException("A campanha 10 ainda não foi publicada."
+                + " Para ver a simulação, use a prévia: GET /api/campanhas/10/previa."));
+        when(servico.resultado(10L, VISUALIZADOR))
+                .thenThrow(new RegraNegocioException("A campanha 10 ainda não foi publicada."));
+
+        mvc.perform(get("/api/campanhas/10/resultado").with(admin()))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("/api/campanhas/10/previa")));
+        mvc.perform(get("/api/campanhas/10/resultado").with(visualizador()))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value("A campanha 10 ainda não foi publicada."));
+    }
+
+    @Test
+    void csvDeCampanhaNaoPublicadaVira422() throws Exception {
+        when(servico.csv(10L, ADMIN)).thenThrow(new RegraNegocioException("A campanha 10 ainda não foi publicada."));
+
+        mvc.perform(get("/api/campanhas/10/resultado.csv").with(admin()))
+                .andExpect(status().isUnprocessableContent());
+    }
+
+    @Test
+    void resultadoDeCampanhaInexistenteVira404() throws Exception {
+        when(servico.resultado(99L, ADMIN)).thenThrow(RecursoNaoEncontradoException.de("Campanha", 99L));
+
+        mvc.perform(get("/api/campanhas/99/resultado").with(admin()))
+                .andExpect(status().isNotFound());
     }
 
     @Test

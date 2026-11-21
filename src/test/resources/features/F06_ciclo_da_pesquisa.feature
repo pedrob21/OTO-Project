@@ -50,6 +50,28 @@ Funcionalidade: Ciclo da pesquisa
     Então a resposta tem status 422
     E a mensagem de erro é "O novo prazo de resposta não pode ser anterior a hoje."
 
+  Cenário: Prorrogação para um prazo anterior ao atual é recusada
+    Dado que o ADMIN criou a pesquisa "002/26" com a campanha mensal "Consolidada junho/2026" de 01/06/2026 a 30/06/2026
+    E que o ADMIN abriu a pesquisa "002/26" com prazo de 10 dias
+    Quando o ADMIN prorroga a pesquisa "002/26" com prazo de 5 dias
+    Então a resposta tem status 422
+    E a mensagem de erro começa com "O novo prazo deve ser posterior ao prazo atual ("
+
+  Cenário: Prorrogação para o mesmo prazo é recusada
+    Dado que o ADMIN criou a pesquisa "002/26" com a campanha mensal "Consolidada junho/2026" de 01/06/2026 a 30/06/2026
+    E que o ADMIN abriu a pesquisa "002/26" com prazo de 10 dias
+    Quando o ADMIN prorroga a pesquisa "002/26" com prazo de 10 dias
+    Então a resposta tem status 422
+    E a mensagem de erro começa com "O novo prazo deve ser posterior ao prazo atual ("
+
+  Cenário: Reabertura para uma data que já passou é recusada
+    Dado que o ADMIN criou a pesquisa "002/26" com a campanha mensal "Consolidada junho/2026" de 01/06/2026 a 30/06/2026
+    E que o ADMIN abriu a pesquisa "002/26" com prazo de 10 dias
+    E que o ADMIN encerrou a pesquisa "002/26"
+    Quando o ADMIN reabre a pesquisa "002/26" para ontem
+    Então a resposta tem status 422
+    E a mensagem de erro é "O novo prazo de resposta não pode ser anterior a hoje."
+
   Cenário: Só se encerra uma pesquisa aberta
     Dado que o ADMIN criou a pesquisa "002/26" com a campanha mensal "Consolidada junho/2026" de 01/06/2026 a 30/06/2026
     Quando o ADMIN encerra a pesquisa "002/26"

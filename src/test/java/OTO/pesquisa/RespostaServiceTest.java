@@ -12,14 +12,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -58,8 +61,23 @@ class RespostaServiceTest {
     @Mock
     private ControleAcesso acesso;
 
-    @InjectMocks
+    /** O prazo das pesquisas da Fixtures é 10/01/2026; os testes rodam em 05/01/2026, dentro do prazo. */
+    private static final LocalDate HOJE = LocalDate.of(2026, 1, 5);
+    private static final int TOLERANCIA = 30;
+
     private RespostaService servico;
+
+    @BeforeEach
+    void criarServico() {
+        servico = servicoEm(HOJE);
+    }
+
+    private RespostaService servicoEm(LocalDate hoje) {
+        ZoneId fuso = ZoneId.of("America/Sao_Paulo");
+        Clock relogio = Clock.fixed(hoje.atTime(12, 0).atZone(fuso).toInstant(), fuso);
+        return new RespostaService(respostas, historicos, campanhas, estabelecimentos, resultados, acesso, relogio,
+                new PesquisaProperties(TOLERANCIA));
+    }
 
     private final Estabelecimento hotel = Fixtures.estabelecimento(5, "Hotel A", "HOTEL");
 
@@ -124,6 +142,44 @@ class RespostaServiceTest {
 
         campanha(StatusRodada.RASCUNHO);
         assertThatThrownBy(() -> servico.responder(10L, 5L, REQUISICAO, ADMIN)).isInstanceOf(RegraNegocioException.class);
+    }
+
+    // ------------------------------------------------------------------ prazo de resposta
+
+    @Test
+    void parceiroAindaRespondeNoUltimoDiaDaTolerancia() {
+        campanha(StatusRodada.ABERTA);
+        when(estabelecimentos.findById(5L)).thenReturn(Optional.of(hotel));
+        when(respostas.save(any())).thenAnswer(inv -> Fixtures.comId(inv.getArgument(0), 100L));
+
+        // prazo 10/01/2026 + 30 dias = 09/02/2026
+        RespostaResponse resposta = servicoEm(LocalDate.of(2026, 2, 9)).responder(10L, 5L, REQUISICAO, PARCEIRO);
+
+        assertThat(resposta.versao()).isEqualTo(1);
+    }
+
+    @Test
+    void parceiroNaoRespondeDepoisDoPrazoMaisATolerancia() {
+        campanha(StatusRodada.ABERTA);
+        RespostaService depoisDoLimite = servicoEm(LocalDate.of(2026, 2, 10));
+
+        assertThatThrownBy(() -> depoisDoLimite.responder(10L, 5L, REQUISICAO, PARCEIRO))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessage("O prazo para responder à pesquisa 005/26 terminou em 09/02/2026. "
+                        + "Fale com a equipe do OTO para enviar a resposta.");
+        verify(respostas, never()).save(any());
+        verify(historicos, never()).save(any());
+    }
+
+    @Test
+    void adminLancaRespostaDepoisDoPrazoComAPesquisaAberta() {
+        campanha(StatusRodada.ABERTA);
+        when(estabelecimentos.findById(5L)).thenReturn(Optional.of(hotel));
+        when(respostas.save(any())).thenAnswer(inv -> Fixtures.comId(inv.getArgument(0), 100L));
+
+        RespostaResponse resposta = servicoEm(LocalDate.of(2026, 6, 1)).responder(10L, 5L, REQUISICAO, ADMIN);
+
+        assertThat(resposta.enviadoPor()).isEqualTo(1L);
     }
 
     @Test
@@ -210,9 +266,27 @@ class RespostaServiceTest {
         assertThat(pendencias.get(0).respondida()).isTrue();
         assertThat(pendencias.get(0).taxaOcupacao()).isEqualByComparingTo("65");
         assertThat(pendencias.get(0).rodadaCodigo()).isEqualTo("005/26");
+        assertThat(pendencias.get(0).respostasAte()).isEqualTo(LocalDate.of(2026, 2, 9));
+        assertThat(pendencias.get(0).aceitaResposta()).isTrue();
         assertThat(pendencias.get(1).campanhaId()).isEqualTo(11L);
         assertThat(pendencias.get(1).respondida()).isFalse();
         assertThat(pendencias.get(1).respostaId()).isNull();
+    }
+
+    @Test
+    void pendenciaDepoisDoPrazoMaisAToleranciaNaoAceitaResposta() {
+        Campanha fev = Fixtures.campanhaMensal(10, Fixtures.rodada(1, "005/26", StatusRodada.ABERTA), FEV);
+        when(acesso.estabelecimentosDo(PARCEIRO)).thenReturn(List.of(5L));
+        when(estabelecimentos.findByIdInOrderByNomeFantasia(List.of(5L))).thenReturn(List.of(hotel));
+        when(campanhas.findByStatusDaRodada(StatusRodada.ABERTA)).thenReturn(List.of(fev));
+        when(respostas.findByCampanhaIdsComEstabelecimento(List.of(10L))).thenReturn(List.of());
+
+        List<PendenciaResponse> pendencias = servicoEm(LocalDate.of(2026, 2, 10)).pendencias(PARCEIRO);
+
+        assertThat(pendencias).singleElement().satisfies(p -> {
+            assertThat(p.aceitaResposta()).isFalse();
+            assertThat(p.respostasAte()).isEqualTo(LocalDate.of(2026, 2, 9));
+        });
     }
 
     @Test

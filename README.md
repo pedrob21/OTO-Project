@@ -242,6 +242,20 @@ tipo e de feriado vêm de `GET /api/referencias`.
 - `OtoProjectApplicationTests`: sobe a aplicação inteira contra o PostgreSQL do `compose.yaml`
   (o Spring Boot inicia o container sozinho, então o Docker precisa estar aberto e o `.env`
   preenchido). Confere migrations, mapeamento das entidades, consultas e configuração.
+- Testes de aceitação (Cucumber): as 13 funcionalidades do Plano de Testes, em português, em
+  `src/test/resources/features`. Cada cenário chama a API real numa porta aleatória, com um
+  PostgreSQL 17 em container (Testcontainers, precisa do Docker). Antes de cada cenário o banco é
+  limpo, as migrations rodam de novo e a massa de `src/test/resources/massa` é carregada
+  (senha de todos os usuários da massa: `Senha@Teste1`). Os passos ficam em `OTO.aceitacao`.
+
+```bash
+# só os testes de aceitação
+./gradlew test --tests OTO.aceitacao.CucumberTest
+# só as funcionalidades de fumaça (F01, F06, F09 e F11)
+./gradlew test --tests OTO.aceitacao.CucumberTest -Ptags=@smoke
+```
+
+O relatório dos cenários fica em `build/reports/cucumber/cucumber.html`.
 
 ## Organização do código
 

@@ -63,6 +63,8 @@ public final class RespostaDtos {
             LocalDate periodoFim,
             String rodadaCodigo,
             LocalDate prazoResposta,
+            LocalDate respostasAte,
+            boolean aceitaResposta,
             Long estabelecimentoId,
             String nomeFantasia,
             boolean respondida,
@@ -72,11 +74,16 @@ public final class RespostaDtos {
             Integer versao,
             Instant enviadoEm) {
 
-        public static PendenciaResponse de(Campanha c, Estabelecimento e, RespostaOcupacao r) {
+        /**
+         * @param respostasAte último dia em que o parceiro responde (prazo mais a tolerância)
+         * @param aceitaResposta falso depois desse dia: só a equipe do OTO lança a resposta
+         */
+        public static PendenciaResponse de(Campanha c, Estabelecimento e, RespostaOcupacao r, LocalDate respostasAte,
+                boolean aceitaResposta) {
             RodadaPesquisa rodada = c.getRodada();
             return new PendenciaResponse(c.getId(), c.getNome(), c.getModalidade(), c.getTipoPeriodo(),
                     c.getFeriadoCodigo(), c.getPeriodoInicio(), c.getPeriodoFim(), rodada.getCodigo(),
-                    rodada.getPrazoResposta(), e.getId(), e.getNomeFantasia(), r != null,
+                    rodada.getPrazoResposta(), respostasAte, aceitaResposta, e.getId(), e.getNomeFantasia(), r != null,
                     r == null ? null : r.getId(),
                     r == null ? null : r.getTaxaOcupacao(),
                     r == null ? null : r.getDiariaMedia(),

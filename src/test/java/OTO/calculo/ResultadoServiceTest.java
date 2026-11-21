@@ -1,6 +1,7 @@
 package OTO.calculo;
 
 import static OTO.Fixtures.ADMIN;
+import static OTO.Fixtures.PARCEIRO;
 import static OTO.Fixtures.VISUALIZADOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -347,16 +348,48 @@ class ResultadoServiceTest {
     }
 
     @Test
-    void resultadoSoDeCampanhaPublicada() {
+    void resultadoDeCampanhaNaoPublicadaApontaAPreviaParaAdmin() {
         Campanha c = campanha(StatusRodada.ENCERRADA);
         ResultadoCampanha resultado = publicado(c);
         when(resultados.findById(10L)).thenReturn(Optional.of(resultado));
-        assertThatThrownBy(() -> servico.resultado(10L, ADMIN)).isInstanceOf(RecursoNaoEncontradoException.class)
-                .hasMessage("A campanha 10 ainda não tem resultado publicado.");
+
+        assertThatThrownBy(() -> servico.resultado(10L, ADMIN)).isInstanceOf(RegraNegocioException.class)
+                .hasMessage("A campanha 10 ainda não foi publicada. "
+                        + "Para ver a simulação, use a prévia: GET /api/campanhas/10/previa.");
 
         when(resultados.findById(10L)).thenReturn(Optional.empty());
-        c.publicar(1L);
-        assertThatThrownBy(() -> servico.resultado(10L, ADMIN)).isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThatThrownBy(() -> servico.resultado(10L, ADMIN)).isInstanceOf(RegraNegocioException.class);
+    }
+
+    @Test
+    void resultadoDeCampanhaNaoPublicadaNaoCitaAPreviaParaOutrosPerfis() {
+        Campanha c = campanha(StatusRodada.ENCERRADA);
+        when(resultados.findById(10L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> servico.resultado(10L, VISUALIZADOR)).isInstanceOf(RegraNegocioException.class)
+                .hasMessage("A campanha 10 ainda não foi publicada.");
+        assertThatThrownBy(() -> servico.resultado(10L, PARCEIRO)).isInstanceOf(RegraNegocioException.class)
+                .hasMessage("A campanha 10 ainda não foi publicada.");
+    }
+
+    @Test
+    void resultadoDeCampanhaInexistenteContinuaNaoEncontrado() {
+        when(campanhas.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> servico.resultado(99L, ADMIN)).isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThatThrownBy(() -> servico.resultado(99L, VISUALIZADOR)).isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThatThrownBy(() -> servico.csv(99L, ADMIN)).isInstanceOf(RecursoNaoEncontradoException.class);
+    }
+
+    @Test
+    void csvDeCampanhaNaoPublicadaTemOMesmoTratamento() {
+        campanha(StatusRodada.ENCERRADA);
+        when(resultados.findById(10L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> servico.csv(10L, ADMIN)).isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("ainda não foi publicada").hasMessageContaining("/previa");
+        assertThatThrownBy(() -> servico.csv(10L, VISUALIZADOR)).isInstanceOf(RegraNegocioException.class)
+                .hasMessage("A campanha 10 ainda não foi publicada.");
     }
 
     @Test

@@ -360,6 +360,50 @@ class RodadaServiceTest {
     }
 
     @Test
+    void prorrogarParaPrazoAnteriorOuIgualAoAtualNaoPode() {
+        RodadaPesquisa r = naSituacao(StatusRodada.ABERTA);
+        r.prorrogar(HOJE.plusDays(10));
+
+        assertThatThrownBy(() -> servico.prorrogar(1L, new PrazoRequest(HOJE.plusDays(5)), ADMIN))
+                .hasMessage("O novo prazo deve ser posterior ao prazo atual (15/01/2026).");
+        assertThatThrownBy(() -> servico.prorrogar(1L, new PrazoRequest(HOJE.plusDays(10)), ADMIN))
+                .hasMessage("O novo prazo deve ser posterior ao prazo atual (15/01/2026).");
+        assertThat(r.getPrazoResposta()).isEqualTo(HOJE.plusDays(10));
+        verify(auditoria, never()).registrar(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void prorrogarParaOutroDiaDepoisDoAtualPode() {
+        RodadaPesquisa r = naSituacao(StatusRodada.ABERTA);
+        r.prorrogar(HOJE.plusDays(10));
+
+        RodadaResponse prorrogada = servico.prorrogar(1L, new PrazoRequest(HOJE.plusDays(11)), ADMIN);
+
+        assertThat(prorrogada.prazoResposta()).isEqualTo(HOJE.plusDays(11));
+    }
+
+    @Test
+    void reabrirParaHojePode() {
+        naSituacao(StatusRodada.ENCERRADA);
+
+        RodadaResponse reaberta = servico.reabrir(1L, new PrazoRequest(HOJE), ADMIN);
+
+        assertThat(reaberta.status()).isEqualTo(StatusRodada.ABERTA);
+        assertThat(reaberta.prazoResposta()).isEqualTo(HOJE);
+    }
+
+    @Test
+    void abrirComPrazoQueJaPassouNaoPode() {
+        RodadaPesquisa r = rascunho();
+        when(campanhas.findByRodadaIdOrderByPeriodoInicio(1L)).thenReturn(List.of(Fixtures.campanhaMensal(10, r, FEV)));
+
+        assertThatThrownBy(() -> servico.abrir(1L,
+                new AberturaRequest(HOJE.minusDays(10), HOJE.minusDays(1)), ADMIN))
+                .hasMessage("O prazo de resposta não pode ser anterior a hoje.");
+        assertThat(r.isRascunho()).isTrue();
+    }
+
+    @Test
     void prorrogarDepoisDoPrazoVencidoPode() {
         RodadaPesquisa r = naSituacao(StatusRodada.ABERTA);
         r.prorrogar(HOJE.minusDays(40));

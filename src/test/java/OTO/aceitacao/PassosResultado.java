@@ -91,10 +91,10 @@ public class PassosResultado {
         api.chamar("ADMIN", "DELETE", "/api/campanhas/" + api.campanha(campanha) + "/publicacao");
     }
 
-    @Entao("o {ator} não encontra o resultado da campanha {string}")
+    @Entao("o {ator} não consegue ver o resultado da campanha {string}")
     public void naoEncontraOResultado(String ator, String campanha) {
         Response consulta = api.consultar(ator, "/api/campanhas/" + api.campanha(campanha) + "/resultado");
-        assertEquals(404, consulta.statusCode(), consulta.asString());
+        assertEquals(422, consulta.statusCode(), consulta.asString());
     }
 
     @Entao("o {ator} vê a campanha {string} entre as publicadas")
@@ -150,6 +150,11 @@ public class PassosResultado {
     @Quando("o {ator} consulta o resultado da campanha {string}")
     public void consultaOResultado(String ator, String campanha) {
         api.chamar(ator, "GET", "/api/campanhas/" + api.campanha(campanha) + "/resultado");
+    }
+
+    @Quando("o {ator} consulta o resultado de uma campanha que não existe")
+    public void consultaOResultadoInexistente(String ator) {
+        api.chamar(ator, "GET", "/api/campanhas/999999/resultado");
     }
 
     @Entao("o tipo {string} aparece com os valores ocultos")

@@ -42,6 +42,27 @@ Funcionalidade: Divulgação com sigilo
     E o CSV contém a linha "Hotel;2;2;30;;;;"
     E o CSV não contém "Hotel A"
 
+  Cenário: Resultado de campanha não publicada é recusado e o ADMIN é levado à prévia
+    Quando o ADMIN consulta o resultado da campanha "1º de Maio 2026"
+    Então a resposta tem status 422
+    E a mensagem de erro contém "ainda não foi publicada"
+    E a mensagem de erro contém "/previa"
+
+  Cenário: Resultado de campanha não publicada para quem não é ADMIN não cita a prévia
+    Quando o VISUALIZADOR consulta o resultado da campanha "1º de Maio 2026"
+    Então a resposta tem status 422
+    E a mensagem de erro contém "ainda não foi publicada"
+    E a mensagem de erro não contém "/previa"
+
+  Cenário: CSV de campanha não publicada tem o mesmo tratamento
+    Quando o VISUALIZADOR baixa o CSV do resultado da campanha "1º de Maio 2026"
+    Então a resposta tem status 422
+    E a mensagem de erro contém "ainda não foi publicada"
+
+  Cenário: Campanha que não existe continua 404
+    Quando o ADMIN consulta o resultado de uma campanha que não existe
+    Então a resposta tem status 404
+
   Cenário: Parceiro não vê o histórico da resposta de outro parceiro
     Quando o PARCEIRO C consulta o histórico da resposta do "Hotel A"
     Então a resposta tem status 403

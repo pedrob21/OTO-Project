@@ -83,6 +83,12 @@ public class PassosPesquisa {
                 Map.of("prazoResposta", hoje().plusDays(dias).toString()));
     }
 
+    @Quando("o ADMIN reabre a pesquisa {string} para ontem")
+    public void reabreAPesquisaParaOntem(String codigo) {
+        api.chamar("ADMIN", "POST", "/api/rodadas/" + api.rodada(codigo) + "/reabrir",
+                Map.of("prazoResposta", hoje().minusDays(1).toString()));
+    }
+
     @Quando("o ADMIN prorroga a pesquisa {string} com prazo de {int} dias")
     public void prorrogaAPesquisa(String codigo, int dias) {
         prorrogar(codigo, hoje().plusDays(dias));

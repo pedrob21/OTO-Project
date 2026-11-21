@@ -98,6 +98,18 @@ public class PassosComuns {
         assertTrue(detalhe.startsWith(inicio), "detail: " + detalhe);
     }
 
+    @Entao("a mensagem de erro contém {string}")
+    public void aMensagemDeErroContem(String trecho) {
+        String detalhe = api.corpo().path("detail").asString();
+        assertTrue(detalhe.contains(trecho), "detail: " + detalhe);
+    }
+
+    @Entao("a mensagem de erro não contém {string}")
+    public void aMensagemDeErroNaoContem(String trecho) {
+        String detalhe = api.corpo().path("detail").asString();
+        assertTrue(!detalhe.contains(trecho), "detail: " + detalhe);
+    }
+
     @Entao("o erro está no formato Problem Details com status {int}")
     public void oErroEstaNoFormatoProblemDetails(int status) {
         assertEquals(status, api.resposta().statusCode());

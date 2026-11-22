@@ -4,6 +4,19 @@ Backend do sistema do Observatório de Turismo de Olímpia (Spring Boot + Postgr
 inventário dos meios de hospedagem, pesquisas de ocupação com os parceiros, cálculo e
 publicação dos resultados pela metodologia do OTO, série histórica e dados dos dashboards.
 
+## Equipe
+
+Projeto acadêmico desenvolvido em 2026 por estudantes do curso de Bacharelado em Sistemas de
+Informação do Instituto de Ciências Matemáticas e de Computação (ICMC) da Universidade de São
+Paulo (USP), campus de São Carlos, para o Observatório de Turismo de Olímpia (OTO).
+
+**Desenvolvedores**
+
+- Daniele Gallego
+- Davi Moreira de Santana
+- Diego Soares da Paz
+- Pedro Bernardo Rodrigues Pinto
+
 ## Como rodar
 
 1. Copie o arquivo`.env.example` renomeando para `.env` e preencha:

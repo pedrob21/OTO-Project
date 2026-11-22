@@ -41,6 +41,61 @@ jobs:
           path: |
             build/reports/tests/test
             build/reports/cucumber
+
+      - name: Publicar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-jacoco
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/test/html
+          if-no-files-found: ignore
+          retention-days: 7
+
+  resumo:
+    if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Baixar a cobertura
+        uses: actions/download-artifact@v4
+        with:
+          name: cobertura-jacoco
+          path: build/reports/jacoco/test
+        continue-on-error: true
+
+      - name: Montar o resumo
+        env:
+          COMMIT_DO_PR: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node scripts/resumo-cobertura.mjs > resumo.md
+          cat resumo.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comentar no PR
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORIO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(gh api "repos/$REPOSITORIO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | contains("<!-- resumo-cobertura-back -->")) | .id' | head -1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$REPOSITORIO/issues/comments/$id" -F body=@resumo.md
+          else
+            gh api --method POST "repos/$REPOSITORIO/issues/$PR/comments" -F body=@resumo.md
+          fi
+
   imagem:
     needs: build
     if: github.ref == 'refs/heads/main'

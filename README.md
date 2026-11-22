@@ -257,6 +257,11 @@ tipo e de feriado vêm de `GET /api/referencias`.
 
 O relatório dos cenários fica em `build/reports/cucumber/cucumber.html`.
 
+A cobertura é medida pelo JaCoCo (sem o pacote `OTO.demo` e a classe `OtoProjectApplication`).
+`./gradlew test` já gera o relatório, em `build/reports/jacoco/test/html/index.html` (XML em
+`build/reports/jacoco/test/jacocoTestReport.xml`). `./gradlew check` falha se as linhas ficarem
+abaixo de 97% ou os branches abaixo de 92%. Nos pull requests o CI comenta a cobertura total e por pacote.
+
 ## Organização do código
 
 | Pacote | Conteúdo |

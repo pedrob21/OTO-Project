@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'org.springframework.boot' version '4.1.1'
     id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -63,8 +64,51 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+// O populador de dados de demonstração nunca é executado por teste, e a classe main só delega ao Spring.
+def foraDaCobertura = ['OTO/demo/**', 'OTO/OtoProjectApplication.class']
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: foraDaCobertura)
+    }))
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: foraDaCobertura)
+    }))
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.97
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.92
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestCoverageVerification')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
     // Só alguns cenários: ./gradlew test --tests OTO.aceitacao.CucumberTest -Ptags=@smoke
     if (project.hasProperty('tags')) {
         systemProperty 'cucumber.filter.tags', project.property('tags')
